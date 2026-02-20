@@ -18,46 +18,37 @@ const io = new Server(server, {
   transports: ["websocket", "polling"]
 });
               
-// CONFIGURATION
 const TOKEN = process.env.BAKONG_TOKEN?.trim() || null;
 const MERCHANT_ID = process.env.BAKONG_MERCHANT_ID?.trim() || null;
+const MERCHANT_NAME = process.env.BAKONG_MERCHANT_NAME?.trim() || "D-pos-system"; 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || null;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || null;
 const BAKONG_ENABLED = !!(TOKEN && MERCHANT_ID);
 
-// EXPANDED PRODUCT CATALOG (Sync this with Frontend for Display)
-const productsCatalog = [
-    { id: 1, name: "Nike Air Max", category: "Shoes", price: 100 },
-    { id: 2, name: "Adidas Ultraboost", category: "Shoes", price: 100 },
-    { id: 3, name: "Classic White Tee", category: "Apparel", price: 100 },
-    { id: 4, name: "Urban Hoodie", category: "Apparel", price: 100 },
-    { id: 5, name: "Smart Watch Series 7", category: "Electronics", price: 250 },
-    { id: 6, name: "Wireless Headphones", category: "Electronics", price: 150 },
-    { id: 7, name: "Denim Jacket", category: "Apparel", price: 120 },
-    { id: 8, name: "Leather Wallet", category: "Accessories", price: 50 },
-];
-
 const pendingOrders = new Map();
 const bot = TELEGRAM_BOT_TOKEN ? new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: false }) : null;
 
-// --- API ROUTES ---
+app.get("/api/config", (req, res) => {
+  res.json({
+    apiKey: process.env.FIREBASE_API_KEY,
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.FIREBASE_APP_ID
+  });
+});
 
 app.post("/api/create-order", (req, res) => {
   try {
-    const { customer, cart } = req.body;
+    // ✅ ទទួលយក seller information ពី Frontend
+    const { customer, cart, seller } = req.body;
     if (!customer || !cart || cart.length === 0) return res.status(400).json({ error: "Invalid data" });
 
-    // 1. Calculate Total (Server Side Security)
-    const amountKHR = cart.reduce((sum, item) => {
-      const product = productsCatalog.find(p => p.id === item.id);
-      return product ? sum + (product.price * item.qty) : sum;
-    }, 0);
+    const amountUSD = cart.reduce((sum, item) => sum + (Number(item.price) * Number(item.qty)), 0);
+    if (amountUSD <= 0) return res.status(400).json({ error: "Invalid total" });
 
-    if (amountKHR <= 0) return res.status(400).json({ error: "Invalid total" });
-
-    // 2. Generate QR Data
     const billNumber = "INV-" + Date.now();
-    // SET EXPIRATION: Current Time + 5 Minutes
     const expirationTimestamp = Date.now() + (5 * 60 * 1000); 
     
     let qrString = "mock_qr_string_testing";
@@ -65,18 +56,15 @@ app.post("/api/create-order", (req, res) => {
 
     if (BAKONG_ENABLED) {
       const optionalData = {
-        currency: khqrData.currency.khr,
-        amount: amountKHR,
+        currency: khqrData.currency.usd, 
+        amount: amountUSD,
         billNumber,
-        storeLabel: "Sokpheak Store",
+        storeLabel: MERCHANT_NAME,
         terminalLabel: "POS-001",
-        expirationTimestamp: expirationTimestamp // Bakong Logic
+        expirationTimestamp: expirationTimestamp 
       };
 
-      const merchantInfo = new MerchantInfo(
-        MERCHANT_ID, "Sokpheak Store", "Phnom Penh", "POS001", "DEV_BANK", optionalData
-      );
-
+      const merchantInfo = new MerchantInfo(MERCHANT_ID, MERCHANT_NAME, "Phnom Penh", "BAKOCKPP", "5999", optionalData);
       const khqr = new BakongKHQR();
       const result = khqr.generateMerchant(merchantInfo);
       
@@ -86,14 +74,12 @@ app.post("/api/create-order", (req, res) => {
       }
     }
 
-    // 3. Store Order
-    pendingOrders.set(md5, { customer, cart, amount: amountKHR, billNumber });
+    // ✅ រក្សាទុក seller info ជាមួយ Order
+    pendingOrders.set(md5, { customer, cart, amount: amountUSD, billNumber, seller });
 
-    // 4. Send Response with Expiry Time for Frontend Countdown
-    res.json({ qrString, md5, amountKHR, expireAt: expirationTimestamp });
-
+    res.json({ qrString, md5, amount: amountUSD, expireAt: expirationTimestamp });
   } catch (err) {
-    console.error(err);
+    console.error("QR Generate Error:", err);
     res.status(500).json({ error: "Server Error" });
   }
 });
@@ -101,8 +87,6 @@ app.post("/api/create-order", (req, res) => {
 app.post("/api/check-status", async (req, res) => {
   const { md5 } = req.body;
   if (!md5) return res.status(400).json({ error: "MD5 missing" });
-
-  // If mock mode, return pending (wait for socket or manual trigger)
   if (!BAKONG_ENABLED) return res.json({ status: "pending" });
 
   try {
@@ -116,7 +100,7 @@ app.post("/api/check-status", async (req, res) => {
       handleSuccess(md5);
       return res.json({ status: "success" });
     }
-  } catch (e) { /* ignore error */ }
+  } catch (e) { /* ignore */ }
 
   res.json({ status: "pending" });
 });
@@ -128,14 +112,33 @@ function handleSuccess(md5) {
   io.emit("payment-success", { md5 });
 
   if (bot && TELEGRAM_CHAT_ID) {
-    const items = order.cart.map(i => `- ${i.name} (${i.qty})`).join("\n");
-    bot.sendMessage(TELEGRAM_CHAT_ID, 
-      `✅ *Payment Received!*\nTotal: ${order.amount} KHR\nFrom: ${order.customer.name}\n\nItems:\n${items}`, 
-      { parse_mode: "Markdown" }
-    );
+    const items = order.cart.map(i => `🔸 ${i.name} (${i.qty} ${i.unit}) - $${(i.price * i.qty).toLocaleString()}`).join("\n");
+    const sellerName = order.seller?.name || "Unknown";
+    const sellerRole = order.seller?.role || "Seller";
+    const adminName = order.seller?.adminName || "Admin";
+
+    // ✅ ទម្រង់សារ Telegram ថ្មី ច្បាស់លាស់ និងមានវិជ្ជាជីវៈ
+    const message = `
+✅ *ការទូទាត់ទទួលបានជោគជ័យ (PAID)*
+━━━━━━━━━━━━━━━━━━━━
+💰 *ទឹកប្រាក់សរុប:* $${order.amount} USD
+🛍️ *អតិថិជន:* ${order.customer.name}
+📞 *ទំនាក់ទំនង:* ${order.customer.phone}
+📍 *ទីតាំង:* ${order.customer.address || "មិនបញ្ជាក់"}
+━━━━━━━━━━━━━━━━━━━━
+👨‍💼 *គណនីលក់ (POS):* ${sellerName} [${sellerRole.toUpperCase()}]
+🛡️ *អ្នកគ្រប់គ្រង (Admin):* ${adminName}
+📝 *វិក្កយបត្រ:* #${order.billNumber}
+━━━━━━━━━━━━━━━━━━━━
+*បញ្ជីទំនិញ:*
+${items}
+`;
+    bot.sendMessage(TELEGRAM_CHAT_ID, message, { parse_mode: "Markdown" });
   }
   pendingOrders.delete(md5);
 }
 
 const PORT = 3000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => {
+    console.log(`\n🚀 D-pos-system Backend is running on port ${PORT}`);
+});

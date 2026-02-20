@@ -1,652 +1,966 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sokpheak Premium | Elevate Style</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-<script src="https://unpkg.com/@phosphor-icons/web"></script>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&family=Noto+Serif+Khmer:wght@400;700&display=swap" rel="stylesheet">
-
-<style>
-    :root { --primary: #0F172A; --accent: #2563EB; }
-    body { font-family: 'Outfit', 'Noto Serif Khmer', sans-serif; background-color: #F8FAFC; }
-    
-    /* Scrollbar Polish */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
-
-    /* Custom Transitions */
-    .list-enter-active, .list-leave-active { transition: all 0.4s ease; }
-    .list-enter-from, .list-leave-to { opacity: 0; transform: translateY(20px); }
-    
-    .toast-enter-active, .toast-leave-active { transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-    .toast-enter-from, .toast-leave-to { opacity: 0; transform: translateX(100%); margin-bottom: -4rem; }
-
-    .modal-enter-active, .modal-leave-active { transition: opacity 0.3s ease; }
-    .modal-enter-from, .modal-leave-to { opacity: 0; }
-    
-    .slide-right-enter-active, .slide-right-leave-active { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-    .slide-right-enter-from, .slide-right-leave-to { transform: translateX(100%); }
-
-    /* Utility */
-    .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-    .text-shadow { text-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-</style>
-</head>
-<body class="text-slate-800 antialiased">
-
-<div id="app" class="min-h-screen flex flex-col relative overflow-x-hidden">
-
-    <header class="fixed top-0 w-full z-40 transition-all duration-300" :class="isScrolled ? 'glass shadow-sm border-b border-white/50 py-2' : 'bg-transparent py-4'">
-        <div class="max-w-7xl mx-auto px-4 md:px-8 flex items-center justify-between gap-4">
-            <div @click="scrollToTop" class="cursor-pointer flex items-center gap-2 group">
-                <div class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white text-xl font-black shadow-lg shadow-blue-900/20 group-hover:rotate-6 transition">S</div>
-                <h1 class="text-2xl font-black tracking-tight text-slate-900 hidden sm:block group-hover:text-blue-600 transition">Sokpheak<span class="text-blue-600">.</span></h1>
-            </div>
-
-            <div class="flex-1 max-w-md relative group">
-                <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg group-focus-within:text-blue-600 transition"></i>
-                <input v-model="searchQuery" type="text" placeholder="Search essentials..." 
-                    class="w-full bg-slate-100/80 border border-transparent rounded-full py-3 pl-12 pr-4 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none text-sm font-medium shadow-inner">
-            </div>
-
-            <div class="flex items-center gap-3">
-                <button @click="toggleWishlistModal" class="relative p-3 rounded-full hover:bg-slate-100 transition hidden sm:flex">
-                    <i class="ph ph-heart text-2xl text-slate-700" :class="wishlist.length > 0 ? 'text-red-500 ph-fill' : ''"></i>
-                </button>
-                <button @click="showCart = true" class="relative p-3 rounded-full hover:bg-slate-100 transition group">
-                    <i class="ph ph-shopping-bag text-2xl text-slate-700 group-hover:text-blue-600 transition"></i>
-                    <span v-if="cartTotalQty > 0" class="absolute top-1 right-1 bg-blue-600 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-lg border-2 border-white animate-bounce-short">{{ cartTotalQty }}</span>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <main class="flex-grow w-full pt-20">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>D-pos-system | Premium POS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&family=Noto+Serif+Khmer:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        [v-cloak] { display: none !important; }
+        body { font-family: 'Outfit', 'Noto Serif Khmer', sans-serif; background-color: #F8FAFC; -webkit-tap-highlight-color: transparent; }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
         
-        <section v-if="!searchQuery" class="relative mx-4 md:mx-8 mt-4 rounded-[2.5rem] overflow-hidden bg-slate-900 text-white min-h-[500px] flex items-center">
-            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-40"></div>
-            <div class="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent"></div>
-            
-            <div class="relative z-10 max-w-7xl mx-auto px-8 w-full">
-                <div class="max-w-xl space-y-6">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold uppercase tracking-wider backdrop-blur-md">
-                        <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span> New Arrivals 2025
-                    </div>
-                    <h2 class="text-5xl md:text-7xl font-black leading-[0.9] tracking-tight">Redefine <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-300">Your Style.</span></h2>
-                    <p class="text-slate-300 text-lg font-light leading-relaxed">Curated collections of premium streetwear and electronics. Experience seamless shopping with instant KHQR payments.</p>
-                    <div class="flex gap-4 pt-4">
-                        <button @click="scrollToProducts" class="bg-white text-slate-900 px-8 py-4 rounded-full font-bold hover:bg-blue-50 transition shadow-xl hover:-translate-y-1 active:translate-y-0 flex items-center gap-2">
-                            Start Shopping <i class="ph-bold ph-arrow-right"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
+        .page-enter-active, .page-leave-active { transition: opacity 0.3s ease, transform 0.3s ease; }
+        .page-enter-from { opacity: 0; transform: translateY(10px); }
+        .page-leave-to { opacity: 0; transform: translateY(-10px); }
 
-        <div id="products" class="max-w-7xl mx-auto px-4 md:px-8 py-12">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                <div>
-                    <h2 class="text-3xl font-bold text-slate-900">Explore Collection</h2>
-                    <p class="text-slate-500 mt-1">Found {{ filteredProducts.length }} items for you</p>
-                </div>
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.4s ease; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        .slide-right-enter-active, .slide-right-leave-active { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .slide-right-enter-from, .slide-right-leave-to { transform: translateX(100%); }
+        .glass-dark { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        
+        .smart-sidebar { transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .smart-sidebar:hover { width: 16rem; }
+        .smart-sidebar .menu-text { opacity: 0; transition: opacity 0.3s; white-space: nowrap; }
+        .smart-sidebar:hover .menu-text { opacity: 1; transition-delay: 0.1s; }
+
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+        .animate-pop { animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        #qrcode img { display: block; margin: 0 auto; border-radius: 8px; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #invoice-capture, #invoice-capture * { visibility: visible; }
+            #invoice-capture { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none !important; border: none !important; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased overflow-x-hidden">
+
+    <div id="app" class="min-h-screen flex relative" v-cloak>
+
+        <div v-if="isCheckingSession" class="fixed inset-0 z-[300] bg-slate-900 flex items-center justify-center">
+            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+
+        <transition name="fade">
+            <div v-if="!isCheckingSession && !isLoggedIn" class="fixed inset-0 z-[200] bg-slate-900 flex items-center justify-center p-4 overflow-hidden">
+                <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-20"></div>
+                <div class="absolute top-0 right-0 w-96 h-96 bg-blue-600/30 rounded-full blur-[100px] animate-pulse"></div>
+                <div class="absolute bottom-0 left-0 w-96 h-96 bg-teal-500/20 rounded-full blur-[100px] animate-pulse" style="animation-delay: 2s;"></div>
                 
-                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                    <button @click="activeCategory = 'All'" 
-                        :class="activeCategory === 'All' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'"
-                        class="px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all shadow-sm">
-                        All Items
-                    </button>
-                    <button v-for="cat in uniqueCategories" :key="cat" @click="activeCategory = cat"
-                        :class="activeCategory === cat ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'"
-                        class="px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all shadow-sm">
-                        {{ cat }}
-                    </button>
-                </div>
-            </div>
-
-            <transition-group name="list" tag="div" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div v-for="product in filteredProducts" :key="product.id" 
-                     class="group bg-white rounded-3xl p-4 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 cursor-pointer flex flex-col h-full relative"
-                     @click="openProductDetail(product)">
-                    
-                    <button @click.stop="toggleWishlist(product)" class="absolute top-6 right-6 z-10 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white transition">
-                        <i class="ph text-lg transition" :class="isWishlisted(product.id) ? 'ph-heart-fill text-red-500' : 'ph-heart text-slate-400 hover:text-red-400'"></i>
-                    </button>
-
-                    <div class="relative overflow-hidden rounded-2xl bg-slate-50 aspect-square mb-4">
-                        <img :src="product.image" class="w-full h-full object-cover group-hover:scale-110 transition duration-700 ease-out" alt="Product">
-                        
-                        <div v-if="product.isNew" class="absolute top-3 left-3 bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider shadow-lg">New</div>
-                        
-                        <button @click.stop="addToCart(product)" class="absolute bottom-3 right-3 bg-slate-900 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg translate-y-14 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition duration-300 hover:bg-blue-600">
-                            <i class="ph-bold ph-plus"></i>
-                        </button>
+                <div class="glass-dark relative z-10 w-full max-w-md p-10 rounded-[2.5rem] shadow-2xl border border-white/10 text-white">
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-gradient-to-tr from-blue-500 to-teal-400 rounded-2xl flex items-center justify-center text-3xl font-black shadow-lg mx-auto mb-5 transform rotate-3">D</div>
+                        <h2 class="text-3xl font-black tracking-tight">D-pos-system</h2>
+                        <p class="text-slate-400 text-sm mt-2">Login to Workspace</p>
                     </div>
-
-                    <div class="flex-1 flex flex-col">
-                        <p class="text-xs font-bold text-blue-600 mb-1 uppercase tracking-wider">{{ product.category }}</p>
-                        <h3 class="font-bold text-slate-800 text-lg mb-1 leading-snug group-hover:text-blue-700 transition">{{ product.name }}</h3>
-                        <div class="mt-auto pt-3 flex items-center justify-between border-t border-slate-50">
-                            <span class="text-xl font-black text-slate-900">{{ product.price.toLocaleString() }} <span class="text-sm font-medium text-slate-500">៛</span></span>
-                            <div class="flex text-yellow-400 text-xs gap-0.5">
-                                <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star-half"></i>
+                    <form @submit.prevent="handleLogin" class="space-y-5">
+                        <div class="space-y-1.5">
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i class="ph-fill ph-user text-slate-400 text-lg"></i></div>
+                                <input v-model="loginForm.username" type="text" required class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-blue-500 focus:bg-slate-800 outline-none transition text-white" placeholder="Username">
                             </div>
                         </div>
+                        <div class="space-y-1.5">
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i class="ph-fill ph-lock-key text-slate-400 text-lg"></i></div>
+                                <input v-model="loginForm.password" type="password" required class="w-full bg-slate-800/50 border border-slate-700 rounded-2xl py-4 pl-12 pr-4 focus:ring-2 focus:ring-blue-500 focus:bg-slate-800 outline-none transition text-white" placeholder="••••••••">
+                            </div>
+                        </div>
+                        <button type="submit" :disabled="loading" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-500 transition-all shadow-lg flex items-center justify-center gap-2 mt-4">
+                            <span v-if="loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                            <span v-else>Access System <i class="ph-bold ph-arrow-right"></i></span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </transition>
+
+        <div v-if="showLogoutConfirm" class="fixed inset-0 z-[250] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showLogoutConfirm = false"></div>
+            <div class="relative bg-white w-full max-w-sm rounded-[2rem] p-8 text-center shadow-2xl animate-pop">
+                <div class="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-5">
+                    <i class="ph-fill ph-sign-out text-4xl"></i>
+                </div>
+                <h3 class="text-2xl font-black text-slate-900 mb-2 font-['Noto_Serif_Khmer']">ចាកចេញពីប្រព័ន្ធ?</h3>
+                <p class="text-slate-500 text-sm mb-8 font-['Noto_Serif_Khmer']">តើអ្នកពិតជាចង់ចាកចេញពីគណនីនេះមែនទេ?</p>
+                <div class="flex gap-3">
+                    <button @click="showLogoutConfirm = false" class="flex-1 py-3.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">បោះបង់</button>
+                    <button @click="executeLogout" class="flex-1 py-3.5 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/30 transition">ចាកចេញ</button>
+                </div>
+            </div>
+        </div>
+
+        <aside v-if="!isCheckingSession && isLoggedIn" class="hidden md:flex flex-col smart-sidebar w-[5.5rem] h-screen bg-slate-900 border-r border-slate-800 fixed left-0 top-0 z-50 py-6 text-slate-400 group shadow-2xl">
+            <div class="flex items-center px-6 mb-10 h-10">
+                <div class="w-10 h-10 bg-gradient-to-tr from-blue-600 to-teal-400 rounded-xl flex shrink-0 items-center justify-center text-white text-xl font-black shadow-lg">D</div>
+                <span class="ml-4 font-black text-xl text-white menu-text tracking-tight">D-pos<span class="text-blue-500">.</span></span>
+            </div>
+
+            <nav class="flex-1 space-y-2 px-3 w-full">
+                <button @click="currentView = 'pos'" :class="currentView === 'pos' ? 'bg-blue-600/10 text-blue-500' : 'hover:bg-slate-800 hover:text-white'" class="flex items-center w-full px-3 py-3.5 rounded-xl transition-all">
+                    <i class="ph-fill ph-storefront text-2xl shrink-0"></i>
+                    <span class="ml-4 font-bold menu-text text-sm font-['Noto_Serif_Khmer']">POS / ហាង</span>
+                </button>
+                <button @click="currentView = 'report'" :class="currentView === 'report' ? 'bg-blue-600/10 text-blue-500' : 'hover:bg-slate-800 hover:text-white'" class="flex items-center w-full px-3 py-3.5 rounded-xl transition-all">
+                    <i class="ph-fill ph-chart-line-up text-2xl shrink-0"></i>
+                    <span class="ml-4 font-bold menu-text text-sm font-['Noto_Serif_Khmer']">របាយការណ៍លក់</span>
+                </button>
+                <button @click="showCart = true" class="flex items-center w-full px-3 py-3.5 hover:bg-slate-800 hover:text-white rounded-xl transition-all relative">
+                    <i class="ph-fill ph-shopping-cart text-2xl shrink-0"></i>
+                    <span class="ml-4 font-bold menu-text text-sm flex-1 text-left">Cart</span>
+                    <span v-if="cartTotalQty > 0" class="absolute left-7 top-2 bg-red-500 text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full">{{ cartTotalQty }}</span>
+                </button>
+            </nav>
+
+            <div class="px-3 mt-auto">
+                <button @click="showLogoutConfirm = true" class="flex items-center w-full px-3 py-3.5 hover:bg-red-500/10 text-red-400 hover:text-red-500 rounded-xl transition-all">
+                    <i class="ph-bold ph-sign-out text-2xl shrink-0"></i>
+                    <span class="ml-4 font-bold menu-text text-sm">Log Out</span>
+                </button>
+                
+                <div class="flex items-center px-3 mt-4 overflow-hidden h-12">
+                    <div class="w-10 h-10 bg-slate-800 rounded-full flex shrink-0 items-center justify-center overflow-hidden border border-slate-700">
+                        <img v-if="userPhotoUrl" :src="userPhotoUrl" class="w-full h-full object-cover" alt="Profile">
+                        <i v-else class="ph-fill ph-user text-slate-400"></i>
+                    </div>
+                    <div class="ml-3 menu-text flex flex-col justify-center">
+                        <span class="text-sm font-bold text-white leading-tight uppercase">{{ loggedInUserFullName }}</span>
+                        <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider">{{ userRole }}</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main v-if="!isCheckingSession && isLoggedIn" class="flex-1 min-h-screen md:ml-[5.5rem] pb-24 md:pb-12 bg-[#F8FAFC] transition-all duration-300">
+            
+            <header class="md:hidden flex items-center justify-between p-4 bg-white shadow-sm sticky top-0 z-40">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold">D</div>
+                    <h1 class="font-black text-lg text-slate-900 font-['Noto_Serif_Khmer']">{{ currentView === 'pos' ? 'D-pos-system' : 'របាយការណ៍លក់' }}</h1>
+                </div>
+                <div class="w-8 h-8 rounded-full overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center" @click="showLogoutConfirm = true">
+                    <img v-if="userPhotoUrl" :src="userPhotoUrl" class="w-full h-full object-cover">
+                    <i v-else class="ph-fill ph-user text-slate-400"></i>
+                </div>
+            </header>
+
+            <transition name="page" mode="out-in">
+                <div v-if="currentView === 'pos'" key="pos" class="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12">
+                    <div class="flex justify-between items-end mb-8">
+                        <div>
+                            <h2 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight font-['Noto_Serif_Khmer']">បញ្ជីទំនិញ</h2>
+                            <p class="text-slate-500 text-sm mt-1 font-['Noto_Serif_Khmer']">ជ្រើសរើសទំនិញដើម្បីលក់</p>
+                        </div>
+                    </div>
+                    
+                    <div v-if="isLoadingProducts" class="text-center py-20 text-slate-400 font-['Noto_Serif_Khmer']">
+                        <i class="ph-bold ph-spinner animate-spin text-2xl mb-2"></i><br>កំពុងទាញទិន្នន័យ...
+                    </div>
+                    <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                        <div v-for="product in products" :key="product.id" class="group bg-white rounded-[1.5rem] p-3 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 flex flex-col h-full">
+                            <div class="relative overflow-hidden rounded-[1rem] bg-slate-50 aspect-square mb-3">
+                                <img :src="product.image || 'https://via.placeholder.com/300?text=No+Image'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                <div class="absolute top-2 left-2 bg-slate-900/80 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded-md">In Stock: {{ product.stockQty }}</div>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-sm md:text-base line-clamp-2 mb-3 leading-snug">{{ product.name }}</h3>
+                            <div class="mt-auto space-y-2 font-['Noto_Serif_Khmer']">
+                                <div @click.stop="addToCart(product, 'retail')" class="flex items-center justify-between p-2 md:p-2.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-300 hover:bg-blue-50/50 transition cursor-pointer group/btn">
+                                    <div class="flex flex-col">
+                                        <span class="text-[10px] font-bold text-slate-400">លក់រាយ ({{ product.retailUnit }})</span>
+                                        <span class="font-black text-blue-600 text-sm">${{ product.retailPrice.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</span>
+                                    </div>
+                                    <div class="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center text-blue-600"><i class="ph-bold ph-plus"></i></div>
+                                </div>
+                                <div @click.stop="addToCart(product, 'wholesale')" class="flex items-center justify-between p-2 md:p-2.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-teal-300 hover:bg-teal-50/50 transition cursor-pointer group/btn" :class="userRole === 'dealer' ? 'ring-1 ring-teal-500/30 bg-teal-50/30' : ''">
+                                    <div class="flex flex-col">
+                                        <span class="text-[10px] font-bold text-slate-400">បោះដុំ ({{ product.wholesaleUnit }})</span>
+                                        <span class="font-black text-teal-600 text-sm">${{ product.wholesalePrice.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</span>
+                                    </div>
+                                    <div class="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center text-teal-600"><i class="ph-bold ph-plus"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="currentView === 'report'" key="report" class="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4 font-['Noto_Serif_Khmer']">
+                        <div>
+                            <h2 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight hidden md:block">របាយការណ៍លក់</h2>
+                            <p class="text-slate-500 mt-1 text-sm md:text-base">ទិន្នន័យស្វ័យប្រវត្តិពីប្រព័ន្ធ</p>
+                        </div>
+                        <div class="flex flex-wrap bg-white rounded-xl shadow-sm border border-slate-200 p-1">
+                            <button @click="filterType = 'today'" :class="filterType === 'today' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'" class="px-4 py-2.5 rounded-lg text-sm font-bold transition flex-1 text-center">ថ្ងៃនេះ</button>
+                            <button @click="filterType = 'month'" :class="filterType === 'month' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'" class="px-4 py-2.5 rounded-lg text-sm font-bold transition flex-1 text-center">ខែនេះ</button>
+                            <button @click="filterType = 'year'" :class="filterType === 'year' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'" class="px-4 py-2.5 rounded-lg text-sm font-bold transition flex-1 text-center">ឆ្នាំនេះ</button>
+                            <button @click="filterType = 'all'" :class="filterType === 'all' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-50'" class="px-4 py-2.5 rounded-lg text-sm font-bold transition flex-1 text-center">ទាំងអស់</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8 font-['Noto_Serif_Khmer']">
+                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-5">
+                            <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-3xl shrink-0"><i class="ph-fill ph-currency-dollar"></i></div>
+                            <div>
+                                <p class="text-[11px] font-bold text-slate-400">ចំណូលសរុប (REVENUE)</p>
+                                <h3 class="text-2xl md:text-3xl font-black text-slate-900 mt-0.5">${{ totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-5">
+                            <div class="w-14 h-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-3xl shrink-0"><i class="ph-fill ph-receipt"></i></div>
+                            <div>
+                                <p class="text-[11px] font-bold text-slate-400">ចំនួនវិក្កយបត្រ (ORDERS)</p>
+                                <h3 class="text-2xl md:text-3xl font-black text-slate-900 mt-0.5">{{ filteredReports.length }}</h3>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-5">
+                            <div class="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-3xl shrink-0"><i class="ph-fill ph-clock-countdown"></i></div>
+                            <div>
+                                <p class="text-[11px] font-bold text-slate-400">រង់ចាំទូទាត់ (PENDING)</p>
+                                <h3 class="text-2xl md:text-3xl font-black text-slate-900 mt-0.5">{{ pendingOrdersCount }}</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden font-['Noto_Serif_Khmer']">
+                        <div class="p-5 md:p-6 border-b border-slate-100 bg-slate-50/50">
+                            <h3 class="text-base md:text-lg font-bold text-slate-900">ប្រវត្តិប្រតិបត្តិការ</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[1000px]">
+                                <thead>
+                                    <tr class="bg-slate-50 text-[11px] text-slate-500 border-b border-slate-100">
+                                        <th class="p-4 font-bold">កាលបរិច្ឆេទ</th>
+                                        <th class="p-4 font-bold">អតិថិជន & ទីតាំង</th>
+                                        <th class="p-4 font-bold">ស្ថានភាព</th>
+                                        <th class="p-4 font-bold text-right">ទឹកប្រាក់សរុប</th>
+                                        <th class="p-4 font-bold text-center">សកម្មភាព</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr v-if="isLoadingReports" class="text-center"><td colspan="5" class="p-10 text-slate-400"><i class="ph-bold ph-spinner animate-spin text-xl"></i></td></tr>
+                                    <tr v-else-if="filteredReports.length === 0" class="text-center"><td colspan="5" class="p-10 text-slate-400">មិនមានទិន្នន័យលក់ទេ។</td></tr>
+                                    <tr v-else v-for="report in filteredReports" :key="report.id" class="hover:bg-slate-50/50 transition">
+                                        <td class="p-4 text-xs md:text-sm text-slate-600">{{ formatDate(report.createdAt) }}</td>
+                                        <td class="p-4">
+                                            <div class="font-bold text-slate-900 text-sm">{{ report.customerName || 'មិនបញ្ជាក់' }}</div>
+                                            <div class="text-[11px] text-slate-500 mt-0.5 flex flex-col gap-0.5">
+                                                <span><i class="ph-fill ph-phone text-slate-400"></i> {{ report.customerPhone || 'N/A' }}</span>
+                                                <span class="text-blue-500 font-medium"><i class="ph-fill ph-map-pin"></i> {{ report.location || 'N/A' }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="p-4">
+                                            <span v-if="report.paymentStatus === 'PAID'" class="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-xs font-bold flex items-center w-fit gap-1"><i class="ph-bold ph-check"></i> បានទូទាត់</span>
+                                            <span v-else-if="report.paymentStatus === 'CANCELLED'" class="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-bold flex items-center w-fit gap-1"><i class="ph-bold ph-x"></i> បានលុបចោល</span>
+                                            <span v-else class="bg-orange-100 text-orange-700 px-3 py-1 rounded-lg text-xs font-bold flex items-center w-fit gap-1"><i class="ph-bold ph-clock"></i> រង់ចាំទូទាត់</span>
+                                        </td>
+                                        <td class="p-4 text-right font-black text-slate-900 text-base">${{ report.totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</td>
+                                        <td class="p-4 text-center">
+                                            <div v-if="report.paymentStatus === 'PENDING'" class="flex items-center justify-center gap-2">
+                                                <button @click="openPayPendingModal(report)" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition shadow-sm">ទូទាត់ប្រាក់</button>
+                                                <button @click="cancelPendingOrder(report)" class="bg-slate-100 text-red-500 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-50 transition border border-slate-200">Cancel</button>
+                                            </div>
+                                            <div v-else class="text-xs text-slate-400">-</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+        </main>
+
+        <nav v-if="!isCheckingSession && isLoggedIn" class="md:hidden fixed bottom-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-100 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)] z-40 pb-safe no-print">
+            <div class="flex justify-around items-center h-16 px-2">
+                <button @click="currentView = 'pos'" :class="currentView === 'pos' ? 'text-blue-600 scale-110' : 'text-slate-400 hover:text-slate-600'" class="flex-1 flex flex-col items-center justify-center gap-1 transition-all">
+                    <i class="text-2xl" :class="currentView === 'pos' ? 'ph-fill ph-storefront' : 'ph ph-storefront'"></i><span class="text-[9px] font-bold font-['Noto_Serif_Khmer']">ហាង</span>
+                </button>
+                <button @click="currentView = 'report'" :class="currentView === 'report' ? 'text-blue-600 scale-110' : 'text-slate-400 hover:text-slate-600'" class="flex-1 flex flex-col items-center justify-center gap-1 transition-all">
+                    <i class="text-2xl" :class="currentView === 'report' ? 'ph-fill ph-chart-line-up' : 'ph ph-chart-line-up'"></i><span class="text-[9px] font-bold font-['Noto_Serif_Khmer']">របាយការណ៍</span>
+                </button>
+                <button @click="showCart = true" class="flex-1 relative flex flex-col items-center justify-center -mt-6">
+                    <div class="w-14 h-14 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg border-4 border-[#F8FAFC]">
+                        <i class="ph-fill ph-shopping-bag text-2xl"></i>
+                        <span v-if="cartTotalQty > 0" class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">{{ cartTotalQty }}</span>
+                    </div>
+                    <span class="text-[9px] font-bold text-slate-800 mt-1">Cart</span>
+                </button>
+                <button @click="showLogoutConfirm = true" class="flex-1 flex flex-col items-center justify-center gap-1 text-red-400">
+                    <i class="text-2xl ph-bold ph-sign-out"></i><span class="text-[9px] font-bold font-['Noto_Serif_Khmer']">ចាកចេញ</span>
+                </button>
+            </div>
+        </nav>
+
+        <transition name="slide-right">
+            <div v-if="showCart" class="fixed inset-0 z-50 flex justify-end no-print">
+                <div @click="showCart = false" class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"></div>
+                <div class="relative bg-white w-full max-w-md h-full shadow-2xl flex flex-col">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center font-['Noto_Serif_Khmer']">
+                        <h2 class="text-xl font-bold flex items-center gap-2">កន្ត្រកទំនិញ <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">{{ cartTotalQty }}</span></h2>
+                        <button @click="showCart = false" class="p-2 hover:bg-slate-100 rounded-full"><i class="ph-bold ph-x text-lg"></i></button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-4 space-y-4 font-['Noto_Serif_Khmer']">
+                        <div v-if="cart.length === 0" class="text-center pt-20 text-slate-400">កន្ត្រកទទេរ</div>
+                        <div v-for="(item, index) in cart" :key="index" class="flex gap-4 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div class="w-16 h-16 rounded-xl overflow-hidden bg-white shrink-0"><img :src="item.image" class="w-full h-full object-cover"></div>
+                            <div class="flex-1 flex flex-col justify-between">
+                                <div>
+                                    <div class="flex justify-between items-start">
+                                        <h4 class="font-bold text-slate-800 text-sm leading-snug pr-2">{{ item.name }}</h4>
+                                        <button @click="removeFromCart(index)" class="text-slate-300 hover:text-red-500"><i class="ph-bold ph-trash"></i></button>
+                                    </div>
+                                    <p class="text-[10px] font-bold mt-0.5" :class="item.type === 'wholesale' ? 'text-teal-600' : 'text-blue-600'">{{ item.type === 'wholesale' ? 'បោះដុំ' : 'លក់រាយ' }} ({{ item.unit }})</p>
+                                </div>
+                                <div class="flex items-center justify-between mt-2">
+                                    <p class="font-black text-slate-900">${{ item.price.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</p>
+                                    <div class="flex items-center gap-3 bg-white rounded-lg px-2 py-1 border border-slate-200">
+                                        <button @click="updateQty(index, -1)" class="w-5 h-5 flex items-center justify-center hover:bg-slate-50 rounded text-xs" :disabled="item.qty <= 1"><i class="ph-bold ph-minus"></i></button>
+                                        <span class="text-xs font-bold w-3 text-center">{{ item.qty }}</span>
+                                        <button @click="updateQty(index, 1)" class="w-5 h-5 flex items-center justify-center hover:bg-slate-50 rounded text-xs"><i class="ph-bold ph-plus"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 border-t border-slate-100 bg-white pb-safe font-['Noto_Serif_Khmer']">
+                        <div class="flex justify-between text-xl font-black text-slate-900 mb-4"><span>សរុប (Total)</span><span>${{ cartTotal.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</span></div>
+                        <button v-if="cart.length > 0" @click="startCheckout" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-blue-600 transition flex items-center justify-center gap-2 shadow-lg">
+                            បញ្ជាក់ការទិញ (Checkout) <i class="ph-bold ph-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </transition>
+
+        <div v-if="showCheckout" class="fixed inset-0 z-[100] flex items-center justify-center p-4 no-print">
+            <div @click="showCheckout = false" class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm"></div>
+            <div class="relative z-10 bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-pop font-['Noto_Serif_Khmer']">
+                
+                <div class="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                    <h2 class="text-xl font-black text-slate-900">ព័ត៌មានអតិថិជន (Checkout)</h2>
+                    <button @click="showCheckout = false" class="text-slate-400 hover:text-slate-800 bg-white w-8 h-8 rounded-full flex items-center justify-center shadow-sm"><i class="ph-bold ph-x"></i></button>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <div class="flex gap-2 p-1 bg-slate-100 rounded-xl mb-4">
+                        <button @click="form.city = 'ភ្នំពេញ'" :class="form.city === 'ភ្នំពេញ' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'" class="flex-1 py-2 rounded-lg text-sm font-bold transition">ភ្នំពេញ (COD)</button>
+                        <button @click="form.city = 'ខេត្ត'" :class="form.city !== 'ភ្នំពេញ' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500'" class="flex-1 py-2 rounded-lg text-sm font-bold transition">តាមខេត្ត</button>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500">ឈ្មោះអតិថិជន *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i class="ph-fill ph-user text-slate-400"></i></div>
+                            <input v-model="form.name" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="ឧ. សុខ ភក្តី">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500">លេខទូរស័ព្ទ *</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i class="ph-fill ph-phone text-slate-400"></i></div>
+                            <input v-model="form.phone" type="tel" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="012 345 678">
+                        </div>
+                    </div>
+
+                    <div v-if="form.city === 'ភ្នំពេញ'" class="space-y-4 animate-fade">
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-bold text-slate-500">ទីតាំង (Google Maps Link)</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i class="ph-fill ph-map-pin text-slate-400"></i></div>
+                                <input v-model="form.mapsLink" type="url" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-blue-500 outline-none text-blue-500" placeholder="https://maps.app.goo.gl/...">
+                            </div>
+                        </div>
+                        
+                        <div class="bg-orange-50 border border-orange-100 p-3 rounded-xl flex gap-3 items-start">
+                            <i class="ph-fill ph-warning-circle text-orange-500 text-xl mt-0.5"></i>
+                            <p class="text-xs text-orange-800 font-medium leading-relaxed">កំណត់សម្គាល់: ការកម្ម៉ង់នេះមិនទាន់ទូទាត់ប្រាក់ទេ។ អតិថិជនត្រូវទូទាត់ប្រាក់ពេលអ្នកដឹកជញ្ជូនយកឥវ៉ាន់ទៅដល់ទីតាំង (COD)។</p>
+                        </div>
+
+                        <button @click="processPendingOrder" :disabled="loading" class="w-full py-4 font-bold bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition shadow-lg flex justify-center items-center gap-2">
+                            <span v-if="loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                            <span v-else>រក្សាទុករង់ចាំបង់ប្រាក់ (Save Pending)</span>
+                        </button>
+                    </div>
+
+                    <div v-if="form.city !== 'ភ្នំពេញ'" class="space-y-4 animate-fade">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1.5">
+                                <label class="text-xs font-bold text-slate-500">ខេត្ត</label>
+                                <input v-model="form.province" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="បញ្ជូលខេត្ត...">
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-xs font-bold text-slate-500">ក្រុមហ៊ុនដឹកជញ្ជូន</label>
+                                <select v-model="form.transportCompany" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none appearance-none font-bold text-blue-700">
+                                    <option value="វីរៈប៊ុនថាំ">វីរៈប៊ុនថាំ</option>
+                                    <option value="J&T">J&T Express</option>
+                                    <option value="ឡានឈ្នួល">ឡានឈ្នួល</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-bold text-slate-500">បញ្ជាក់សាខា / កន្លែងផ្ញើ</label>
+                            <input v-model="form.branch" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="ឧ. សាខាអូឡាំពិក...">
+                        </div>
+                        
+                        <button @click="processOrder" :disabled="loading" class="w-full py-4 font-bold bg-slate-900 text-white rounded-xl hover:bg-blue-600 transition shadow-lg flex justify-center items-center gap-2">
+                            <span v-if="loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                            <span v-else>បន្តទៅទូទាត់តាម QR: ${{ cartTotal.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showQR" class="fixed inset-0 z-[110] flex items-center justify-center p-4 no-print">
+            <div class="absolute inset-0 bg-slate-900/85 backdrop-blur-md"></div>
+            <div class="relative bg-white w-full max-w-[340px] rounded-[2.5rem] p-8 text-center shadow-2xl overflow-hidden animate-pop">
+                <div class="absolute top-0 left-0 w-full h-1.5 bg-slate-100">
+                    <div class="h-full bg-gradient-to-r from-blue-500 via-teal-400 to-blue-500 transition-all duration-1000 ease-linear" :style="{ width: (qrTimeLeft / 300 * 100) + '%' }"></div>
+                </div>
+                <div class="flex items-center justify-center w-16 h-16 bg-blue-50 text-blue-600 rounded-full mx-auto mb-4 shadow-inner"><i class="ph-fill ph-qr-code text-3xl"></i></div>
+                <h3 class="text-2xl font-black text-slate-900 font-['Noto_Serif_Khmer']">ស្កេនដើម្បីទូទាត់ប្រាក់</h3>
+                <div class="bg-white p-4 rounded-[1.5rem] border-2 border-slate-100 shadow-sm inline-block mb-4 mt-4"><div id="qrcode"></div></div>
+                <div class="text-4xl font-black text-slate-900 mb-5">${{ currentOrderTotal.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</div>
+                <button @click="cancelPayment" class="w-full py-3.5 rounded-xl text-red-500 font-bold bg-red-50 hover:bg-red-100 transition-colors font-['Noto_Serif_Khmer']">បោះបង់ការទូទាត់</button>
+            </div>
+        </div>
+
+        <div v-if="showInvoice" class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+            <div class="relative w-full max-w-md flex flex-col h-full md:h-auto max-h-[90vh]">
+                
+                <div class="flex justify-between items-center mb-4 no-print shrink-0 bg-white/10 p-2 rounded-2xl backdrop-blur">
+                    <button @click="closeInvoice" class="w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full text-white flex items-center justify-center transition"><i class="ph-bold ph-x text-xl"></i></button>
+                    <div class="flex gap-2">
+                        <button @click="downloadInvoiceImage" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl flex items-center gap-2 transition shadow-lg font-['Noto_Serif_Khmer']"><i class="ph-bold ph-download-simple"></i> ទាញយករូបភាព</button>
+                        <button @click="printInvoice" class="px-4 py-2 bg-white text-slate-800 text-sm font-bold rounded-xl flex items-center gap-2 hover:bg-slate-100 transition shadow-lg font-['Noto_Serif_Khmer']"><i class="ph-bold ph-printer"></i> Print</button>
+                    </div>
+                </div>
+
+                <div id="invoice-capture" class="bg-white rounded-2xl shadow-2xl overflow-y-auto flex-1 p-6 md:p-8 font-['Noto_Serif_Khmer'] text-slate-800 relative">
+                    <div v-if="currentInvoice.paymentStatus === 'PENDING'" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-10 pointer-events-none rotate-[-30deg]">
+                        <span class="text-6xl font-black text-orange-600 border-8 border-orange-600 px-6 py-2 rounded-3xl uppercase tracking-widest">រង់ចាំទូទាត់</span>
+                    </div>
+
+                    <div class="text-center mb-6">
+                        <div class="w-14 h-14 bg-slate-900 rounded-xl flex items-center justify-center text-white text-2xl font-black mx-auto mb-2">D</div>
+                        <h2 class="text-xl font-black">វិក្កយបត្រ (INVOICE)</h2>
+                        <p class="text-xs text-slate-500">កាលបរិច្ឆេទ: {{ formatDate(currentInvoice.createdAt) }}</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl mb-6 text-sm">
+                        <div class="grid grid-cols-3 gap-y-2">
+                            <span class="text-slate-500 font-medium">អតិថិជន:</span>
+                            <span class="col-span-2 font-bold">{{ currentInvoice.customerName }}</span>
+                            <span class="text-slate-500 font-medium">ទូរស័ព្ទ:</span>
+                            <span class="col-span-2 font-bold">{{ currentInvoice.customerPhone }}</span>
+                            <span class="text-slate-500 font-medium">ទីតាំង:</span>
+                            <span class="col-span-2 font-bold">{{ currentInvoice.location }}</span>
+                            <span v-if="currentInvoice.transportCompany" class="text-slate-500 font-medium">ដឹកតាម:</span>
+                            <span v-if="currentInvoice.transportCompany" class="col-span-2 font-bold text-blue-600">{{ currentInvoice.transportCompany }} ({{ currentInvoice.branch }})</span>
+                        </div>
+                    </div>
+
+                    <table class="w-full mb-6 text-sm border-collapse">
+                        <thead>
+                            <tr class="border-b-2 border-slate-200 text-slate-500">
+                                <th class="text-left py-2">បរិយាយ</th>
+                                <th class="text-center py-2">ចំនួន</th>
+                                <th class="text-right py-2">តម្លៃ</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr v-for="item in currentInvoice.items" :key="item.id">
+                                <td class="py-3">
+                                    <p class="font-bold">{{ item.name }}</p>
+                                    <p class="text-[10px] text-slate-500 uppercase">{{ item.type === 'wholesale' ? 'បោះដុំ' : 'រាយ' }} ({{ item.unit }})</p>
+                                </td>
+                                <td class="py-3 text-center font-bold">x{{ item.qty }}</td>
+                                <td class="py-3 text-right font-bold">${{ (item.price * item.qty).toLocaleString('en-US', {minimumFractionDigits: 2}) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="border-t-2 border-slate-800 pt-4 flex justify-between items-center mb-6">
+                        <span class="font-bold text-lg">សរុប (TOTAL):</span>
+                        <span class="font-black text-2xl">${{ currentInvoice.totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</span>
+                    </div>
+
+                    <div class="text-center text-xs text-slate-500 border-t border-slate-100 pt-4">
+                        <p>បម្រើដោយ: <b>{{ currentInvoice.sellerName }}</b></p>
+                        <p class="mt-1">សូមអរគុណសម្រាប់ការគាំទ្រ!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="showPendingPayModal" class="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm no-print">
+            <div class="bg-white w-full max-w-sm rounded-[2rem] p-6 shadow-2xl font-['Noto_Serif_Khmer'] animate-pop">
+                <h3 class="text-lg font-black text-slate-900 mb-4 border-b pb-3">ទូទាត់ប្រាក់ (អតិថិជន: {{ pendingOrderToPay.customerName }})</h3>
+                
+                <div class="bg-slate-50 p-4 rounded-xl text-center mb-4">
+                    <p class="text-sm text-slate-500 mb-1">ទឹកប្រាក់ត្រូវបង់</p>
+                    <p class="text-3xl font-black text-slate-900">${{ pendingOrderToPay.totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2}) }}</p>
+                </div>
+
+                <div class="flex gap-2 mb-4">
+                    <button @click="pendingPayMethod = 'qr'" :class="pendingPayMethod === 'qr' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'" class="flex-1 py-3 rounded-xl font-bold text-sm transition flex flex-col items-center justify-center gap-1"><i class="ph-bold ph-qr-code text-xl"></i> QR KHQR</button>
+                    <button @click="pendingPayMethod = 'cash'" :class="pendingPayMethod === 'cash' ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-600'" class="flex-1 py-3 rounded-xl font-bold text-sm transition flex flex-col items-center justify-center gap-1"><i class="ph-bold ph-money text-xl"></i> លុយសុទ្ធ</button>
+                </div>
+
+                <div v-if="pendingPayMethod === 'cash'" class="space-y-3 mb-4 animate-fade">
+                    <input v-model="pendingCashAmount" type="number" class="w-full border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-green-500" placeholder="ចំនួនទឹកប្រាក់ទទួលបាន...">
+                    <input v-model="pendingCashNote" type="text" class="w-full border border-slate-200 rounded-xl py-3 px-4 outline-none focus:border-green-500" placeholder="កំណត់សម្គាល់ (បើមាន)...">
+                </div>
+
+                <div class="flex gap-2">
+                    <button @click="showPendingPayModal = false" class="px-4 py-3 rounded-xl font-bold text-slate-500 hover:bg-slate-100">បោះបង់</button>
+                    <button @click="confirmPendingPayment" :disabled="loading" class="flex-1 py-3 rounded-xl font-bold text-white shadow-lg transition flex items-center justify-center" :class="pendingPayMethod === 'cash' ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'">
+                        <span v-if="loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        <span v-else>យល់ព្រមទូទាត់</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="fixed bottom-20 md:bottom-4 right-0 z-[200] p-4 flex flex-col gap-3 w-full max-w-sm pointer-events-none no-print">
+            <transition-group name="toast">
+                <div v-for="note in notifications" :key="note.id" class="pointer-events-auto flex items-center gap-4 bg-white border border-slate-100 shadow-2xl p-4 rounded-2xl">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0" :class="note.type === 'error' ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'">
+                        <i class="ph-fill text-xl" :class="note.type === 'error' ? 'ph-warning-circle' : 'ph-check-circle'"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm font-['Noto_Serif_Khmer']">{{ note.title }}</h4>
+                        <p class="text-xs text-slate-500 font-['Noto_Serif_Khmer']">{{ note.message }}</p>
                     </div>
                 </div>
             </transition-group>
-
-            <div v-if="filteredProducts.length === 0" class="flex flex-col items-center justify-center py-20 text-center">
-                <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-6">
-                    <i class="ph ph-magnifying-glass text-4xl text-slate-400"></i>
-                </div>
-                <h3 class="text-xl font-bold text-slate-800">No products found</h3>
-                <p class="text-slate-500 max-w-xs mx-auto mt-2">We couldn't find what you're looking for. Try adjusting your filters.</p>
-                <button @click="resetFilters" class="mt-6 text-blue-600 font-bold hover:underline">Clear all filters</button>
-            </div>
-        </div>
-    </main>
-
-    <footer class="bg-white border-t border-slate-200 pt-16 pb-8">
-        <div class="max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-            <div class="col-span-1 md:col-span-1">
-                <div class="flex items-center gap-2 mb-6">
-                    <div class="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold">S</div>
-                    <span class="font-bold text-xl">Sokpheak.</span>
-                </div>
-                <p class="text-slate-500 text-sm leading-relaxed mb-6">Elevating the shopping experience in Cambodia with premium products and instant technology.</p>
-                <div class="flex gap-4">
-                    <a href="#" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-blue-600 hover:text-white transition"><i class="ph-fill ph-facebook-logo text-xl"></i></a>
-                    <a href="#" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-blue-400 hover:text-white transition"><i class="ph-fill ph-telegram-logo text-xl"></i></a>
-                </div>
-            </div>
-            
-            <div>
-                <h4 class="font-bold text-slate-900 mb-6">Shop</h4>
-                <ul class="space-y-3 text-sm text-slate-500">
-                    <li><a href="#" class="hover:text-blue-600 transition">All Products</a></li>
-                    <li><a href="#" class="hover:text-blue-600 transition">New Arrivals</a></li>
-                    <li><a href="#" class="hover:text-blue-600 transition">Best Sellers</a></li>
-                </ul>
-            </div>
-
-            <div>
-                <h4 class="font-bold text-slate-900 mb-6">Company</h4>
-                <ul class="space-y-3 text-sm text-slate-500">
-                    <li><a href="#" class="hover:text-blue-600 transition">About Us</a></li>
-                    <li><a href="#" class="hover:text-blue-600 transition">Contact</a></li>
-                    <li><a href="#" class="hover:text-blue-600 transition">Privacy Policy</a></li>
-                </ul>
-            </div>
-
-            <div>
-                <h4 class="font-bold text-slate-900 mb-6">Stay in the loop</h4>
-                <div class="relative">
-                    <input type="email" placeholder="Email address" class="w-full bg-slate-100 border-none rounded-xl py-3 pl-4 pr-12 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                    <button class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white hover:bg-blue-600 transition">
-                        <i class="ph-bold ph-arrow-right"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="max-w-7xl mx-auto px-4 md:px-8 pt-8 border-t border-slate-100 text-center text-xs text-slate-400 font-medium">
-            &copy; 2025 Sokpheak Store. Designed with <i class="ph-fill ph-heart text-red-400 mx-1"></i> in Phnom Penh.
-        </div>
-    </footer>
-
-    <transition name="modal">
-    <div v-if="activeProduct" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div @click="activeProduct = null" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
-        <div class="relative bg-white w-full max-w-5xl rounded-[2rem] overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[90vh] animate-scale-up">
-            <button @click="activeProduct = null" class="absolute top-5 right-5 z-20 w-10 h-10 bg-white/80 backdrop-blur rounded-full flex items-center justify-center hover:bg-white shadow-md transition"><i class="ph-bold ph-x text-lg"></i></button>
-            
-            <div class="md:w-1/2 bg-gray-50 h-64 md:h-auto relative">
-                <img :src="activeProduct.image" class="w-full h-full object-cover">
-            </div>
-
-            <div class="md:w-1/2 p-8 md:p-12 flex flex-col overflow-y-auto">
-                <div class="flex-1">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-wider">{{ activeProduct.category }}</span>
-                        <div class="flex text-yellow-400 text-sm gap-1">
-                            <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i>
-                            <span class="text-slate-400 ml-1">(24 reviews)</span>
-                        </div>
-                    </div>
-                    
-                    <h2 class="text-4xl font-black text-slate-900 mb-4">{{ activeProduct.name }}</h2>
-                    <div class="text-3xl font-bold text-blue-600 mb-6">{{ activeProduct.price.toLocaleString() }} ៛</div>
-                    
-                    <p class="text-slate-500 leading-relaxed mb-8">
-                        Experience premium quality with the {{ activeProduct.name }}. Designed for modern life, ensuring durability and style. This authentic product is sourced directly from certified manufacturers.
-                    </p>
-
-                    <div class="grid grid-cols-2 gap-6 mb-8">
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Select Size</label>
-                            <div class="flex gap-2">
-                                <button class="w-10 h-10 rounded-lg border border-slate-200 text-sm font-bold hover:border-blue-500 hover:text-blue-500 transition">S</button>
-                                <button class="w-10 h-10 rounded-lg bg-slate-900 text-white text-sm font-bold shadow-lg">M</button>
-                                <button class="w-10 h-10 rounded-lg border border-slate-200 text-sm font-bold hover:border-blue-500 hover:text-blue-500 transition">L</button>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-slate-400 mb-2">Color</label>
-                            <div class="flex gap-2">
-                                <button class="w-10 h-10 rounded-full bg-black border-2 border-white shadow-md ring-2 ring-slate-200"></button>
-                                <button class="w-10 h-10 rounded-full bg-blue-600 border-2 border-white shadow-md"></button>
-                                <button class="w-10 h-10 rounded-full bg-slate-300 border-2 border-white shadow-md"></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex gap-4 mt-4 pt-6 border-t border-slate-100">
-                    <button @click="addToCart(activeProduct); activeProduct = null" class="flex-1 bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-blue-600 transition shadow-lg shadow-slate-900/20 flex justify-center items-center gap-2 transform active:scale-95">
-                        <i class="ph-bold ph-shopping-bag text-xl"></i> Add to Cart
-                    </button>
-                    <button @click="toggleWishlist(activeProduct)" class="w-14 rounded-xl border border-slate-200 flex items-center justify-center text-2xl hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition">
-                        <i class="ph" :class="isWishlisted(activeProduct.id) ? 'ph-heart-fill text-red-500' : 'ph-heart'"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    </transition>
-
-    <transition name="slide-right">
-    <div v-if="showCart" class="fixed inset-0 z-50 flex justify-end">
-        <div @click="showCart = false" class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity"></div>
-        <div class="relative bg-white w-full max-w-md h-full shadow-2xl flex flex-col transform transition-transform duration-300">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white/80 backdrop-blur-md z-10">
-                <h2 class="text-xl font-bold flex items-center gap-2">My Cart <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">{{ cartTotalQty }}</span></h2>
-                <button @click="showCart = false" class="p-2 hover:bg-slate-100 rounded-full transition"><i class="ph-bold ph-x text-lg"></i></button>
-            </div>
-            
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <div v-if="cart.length === 0" class="flex flex-col items-center justify-center h-full pb-20 text-center">
-                    <div class="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                        <i class="ph-duotone ph-shopping-bag-open text-6xl text-slate-300"></i>
-                    </div>
-                    <h3 class="font-bold text-lg text-slate-800">Your bag is empty</h3>
-                    <p class="text-slate-500 text-sm mt-2 mb-6">Looks like you haven't added anything yet.</p>
-                    <button @click="showCart = false" class="text-blue-600 font-bold hover:underline">Start Shopping</button>
-                </div>
-
-                <div v-for="(item, index) in cart" :key="index" class="flex gap-4 group">
-                    <div class="w-24 h-24 rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex-shrink-0">
-                        <img :src="item.image" class="w-full h-full object-cover">
-                    </div>
-                    <div class="flex-1 flex flex-col justify-between py-1">
-                        <div>
-                            <div class="flex justify-between items-start">
-                                <h4 class="font-bold text-slate-800 line-clamp-1 pr-2">{{ item.name }}</h4>
-                                <button @click="removeFromCart(index)" class="text-slate-300 hover:text-red-500 transition"><i class="ph-bold ph-trash"></i></button>
-                            </div>
-                            <p class="text-xs text-slate-500 mt-1 uppercase">{{ item.category }}</p>
-                        </div>
-                        <div class="flex items-center justify-between mt-2">
-                            <p class="font-bold text-slate-900">{{ item.price.toLocaleString() }} ៛</p>
-                            <div class="flex items-center gap-3 bg-slate-100 rounded-lg px-2 py-1.5">
-                                <button @click="updateQty(index, -1)" class="w-6 h-6 flex items-center justify-center hover:bg-white rounded-md transition text-xs shadow-sm disabled:opacity-50" :disabled="item.qty <= 1"><i class="ph-bold ph-minus"></i></button>
-                                <span class="text-sm font-bold w-4 text-center">{{ item.qty }}</span>
-                                <button @click="updateQty(index, 1)" class="w-6 h-6 flex items-center justify-center hover:bg-white rounded-md transition text-xs shadow-sm"><i class="ph-bold ph-plus"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="p-6 border-t border-slate-100 bg-slate-50/50">
-                <div class="flex justify-between text-sm text-slate-500 mb-2">
-                    <span>Subtotal</span>
-                    <span>{{ cartTotal.toLocaleString() }} ៛</span>
-                </div>
-                <div class="flex justify-between text-xl font-black text-slate-900 mb-6">
-                    <span>Total</span>
-                    <span>{{ cartTotal.toLocaleString() }} ៛</span>
-                </div>
-                <button v-if="cart.length > 0" @click="showCheckout = true; showCart = false" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-blue-600 transition shadow-lg shadow-blue-900/10 flex items-center justify-center gap-2">
-                    Checkout Now <i class="ph-bold ph-arrow-right"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-    </transition>
-
-    <div v-if="showCheckout" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div @click="showCheckout = false" class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity"></div>
-        <div class="relative bg-white w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden animate-scale-up">
-            <div class="bg-slate-50 p-8 border-b border-slate-100">
-                <h2 class="text-2xl font-black text-slate-900">Secure Checkout</h2>
-                <div class="flex items-center gap-2 mt-2">
-                    <div class="h-1 flex-1 bg-blue-600 rounded-full"></div>
-                    <div class="h-1 flex-1 bg-blue-600 rounded-full"></div>
-                    <div class="h-1 flex-1 bg-slate-200 rounded-full"></div>
-                </div>
-            </div>
-            
-            <div class="p-8 space-y-5">
-                <div class="grid grid-cols-2 gap-4">
-                     <div class="space-y-1.5 col-span-2">
-                        <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">Full Name</label>
-                        <div class="relative">
-                            <i class="ph-fill ph-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input v-model="form.name" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 pl-10 pr-4 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition font-medium" placeholder="Sok Pheak">
-                        </div>
-                    </div>
-                    <div class="space-y-1.5 col-span-2">
-                        <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">Telegram / Phone</label>
-                        <div class="relative">
-                            <i class="ph-fill ph-phone absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input v-model="form.phone" type="tel" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 pl-10 pr-4 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition font-medium" placeholder="012 345 678">
-                        </div>
-                    </div>
-                    <div class="space-y-1.5 col-span-2">
-                        <label class="text-xs font-bold uppercase text-slate-500 tracking-wider">Delivery Address</label>
-                        <div class="relative">
-                            <i class="ph-fill ph-map-pin absolute left-3 top-3.5 text-slate-400"></i>
-                            <textarea v-model="form.address" rows="2" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3.5 pl-10 pr-4 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition font-medium" placeholder="House 123, Street 456..."></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="p-6 border-t border-slate-100 flex gap-3">
-                <button @click="showCheckout = false" class="px-6 py-3 font-bold text-slate-500 hover:bg-slate-100 rounded-xl transition">Cancel</button>
-                <button @click="processOrder" :disabled="loading" class="flex-1 py-3.5 font-bold bg-slate-900 text-white rounded-xl hover:bg-blue-600 transition shadow-lg flex justify-center items-center gap-2">
-                    <span v-if="loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    <span v-else class="flex items-center gap-2">Pay {{ cartTotal.toLocaleString() }} ៛ <i class="ph-bold ph-arrow-right"></i></span>
-                </button>
-            </div>
         </div>
     </div>
 
-    <div v-if="showQR" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-md"></div>
-        <div class="relative bg-white w-full max-w-sm rounded-[2.5rem] p-8 text-center shadow-2xl border-4 border-white/20 animate-scale-up">
-            <div class="absolute top-0 left-0 w-full h-1.5 bg-slate-100 overflow-hidden rounded-t-[2.5rem]">
-                <div class="h-full bg-gradient-to-r from-blue-500 to-red-500 transition-all duration-1000 ease-linear" :style="{ width: (qrTimeLeft / 300 * 100) + '%' }"></div>
-            </div>
+    <script type="module">
+        import { createApp, ref, reactive, computed, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getFirestore, collection, getDocs, query, where, doc, updateDoc, increment, addDoc, orderBy } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
-            <div class="flex items-center justify-center w-16 h-16 bg-blue-50 text-blue-600 rounded-full mx-auto mb-4 animate-bounce-slow">
-                <i class="ph-fill ph-qr-code text-3xl"></i>
-            </div>
-            <h3 class="text-2xl font-black text-slate-900">Scan to Pay</h3>
-            <p class="text-slate-500 text-sm mb-6">Open your ABA or ACLEDA app to scan</p>
-            
-            <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-inner inline-block mb-6 relative group">
-                <div id="qrcode" class="opacity-90 group-hover:opacity-100 transition"></div>
-                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div class="bg-white p-1.5 rounded-full shadow-md"><i class="ph-fill ph-currency-dollar-simple text-blue-600 text-xl"></i></div>
-                </div>
-            </div>
+        //const API_URL = "http://localhost:3000";
+        const API_URL = "https://d-pos-backend.onrender.com"; // ដាក់ Link Backend ថ្មី 
 
-            <div class="text-3xl font-black text-slate-900 mb-2">{{ cartTotal.toLocaleString() }} ៛</div>
-            
-            <div class="flex items-center justify-center gap-2 mb-6 bg-slate-50 py-2 rounded-lg mx-auto w-fit px-4">
-                <i class="ph-bold ph-clock" :class="qrTimeLeft < 60 ? 'text-red-500' : 'text-blue-500'"></i>
-                <span class="text-sm font-mono font-bold" :class="qrTimeLeft < 60 ? 'text-red-500' : 'text-slate-700'">
-                   {{ formatTime(qrTimeLeft) }}
-                </span>
-            </div>
-            
-            <button @click="cancelPayment" class="text-sm text-slate-400 hover:text-red-500 font-semibold transition">Cancel Transaction</button>
-        </div>
-    </div>
+        createApp({
+            setup() {
+                const currentView = ref('pos'); 
+                const isCheckingSession = ref(true); 
+                const isLoggedIn = ref(false);
+                const showLogoutConfirm = ref(false);
+                
+                const userRole = ref(''); 
+                const loggedInUserFullName = ref('');
+                const userPhotoUrl = ref('');
+                const adminName = ref(''); 
+                const loginForm = reactive({ username: '', password: '' });
 
-    <div class="fixed bottom-0 right-0 z-[60] p-4 flex flex-col gap-3 w-full max-w-sm pointer-events-none">
-        <transition-group name="toast">
-            <div v-for="note in notifications" :key="note.id" 
-                 class="pointer-events-auto flex items-center gap-4 bg-white/90 backdrop-blur-md border border-white shadow-2xl shadow-blue-900/10 p-4 rounded-2xl transform transition-all duration-300">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0" 
-                     :class="note.type === 'success' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'">
-                    <i class="ph-fill text-xl" :class="note.type === 'success' ? 'ph-check-circle' : 'ph-warning-circle'"></i>
-                </div>
-                <div>
-                    <h4 class="font-bold text-slate-900 text-sm">{{ note.title }}</h4>
-                    <p class="text-xs text-slate-500 font-medium">{{ note.message }}</p>
-                </div>
-                <button @click="removeNotification(note.id)" class="ml-auto text-slate-400 hover:text-slate-800"><i class="ph-bold ph-x"></i></button>
-            </div>
-        </transition-group>
-    </div>
+                const socket = io(API_URL, { transports: ["polling", "websocket"] });
+                const products = ref([]);
+                const isLoadingProducts = ref(false);
+                const reports = ref([]);
+                const isLoadingReports = ref(false);
+                const filterType = ref('today');
 
-</div>
+                const cart = ref([]);
+                const showCart = ref(false);
+                const showCheckout = ref(false);
+                const showQR = ref(false);
+                const loading = ref(false);
+                const notifications = ref([]);
+                
+                const form = reactive({ 
+                    name: '', phone: '', city: 'ភ្នំពេញ', province: '', 
+                    mapsLink: '', transportCompany: 'វីរៈប៊ុនថាំ', branch: '' 
+                });
 
-<script>
-const { createApp, ref, computed, watch, onMounted } = Vue;
+                const showInvoice = ref(false);
+                const currentInvoice = ref(null);
 
-const API_URL = "https://tutto-joyously-alayna.ngrok-free.dev"; // Change for prod
+                const showPendingPayModal = ref(false);
+                const pendingOrderToPay = ref(null);
+                const pendingPayMethod = ref('qr');
+                const pendingCashAmount = ref('');
+                const pendingCashNote = ref('');
+                
+                const qrTimeLeft = ref(300);
+                let timerInterval = null, pollTimer = null;
+                const currentHash = ref('');
+                const currentOrderTotal = ref(0);
+                const db = ref(null);
 
-createApp({
-  setup() {
-      // 1. Reactive State
-      const socket = io(API_URL, { transports: ["polling", "websocket"] });
-      const showCart = ref(false);
-      const showCheckout = ref(false);
-      const showQR = ref(false);
-      const loading = ref(false);
-      const activeProduct = ref(null);
-      const searchQuery = ref("");
-      const activeCategory = ref("All");
-      const isScrolled = ref(false);
-      
-      const form = ref({ name: '', phone: '', address: '' });
-      const cart = ref([]);
-      const wishlist = ref([]);
-      const notifications = ref([]);
-      
-      // QR Timer State
-      const qrTimeLeft = ref(300);
-      let timerInterval = null;
-      let pollTimer = null;
-      const currentHash = ref('');
+                const notify = (title, message, type = 'success') => {
+                    const id = Date.now();
+                    notifications.value.push({ id, title, message, type });
+                    setTimeout(() => notifications.value = notifications.value.filter(n => n.id !== id), 4000);
+                };
 
-      // Products Data
-      const products = ref([
-        { id: 1, name: "Nike Air Max 270", category: "Shoes", price: 120, isNew: true, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=600" },
-        { id: 2, name: "Sony WH-1000XM5", category: "Electronics", price: 350, isNew: false, image: "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&q=80&w=600" },
-        { id: 3, name: "Minimalist Watch", category: "Accessories", price: 180, isNew: true, image: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?auto=format&fit=crop&q=80&w=600" },
-        { id: 4, name: "Essential Hoodie", category: "Apparel", price: 65, isNew: false, image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80&w=600" },
-        { id: 5, name: "Leather Backpack", category: "Accessories", price: 120, isNew: false, image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=600" },
-        { id: 6, name: "Gaming Mouse", category: "Electronics", price: 80, isNew: true, image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&q=80&w=600" },
-        { id: 7, name: "Denim Jacket", category: "Apparel", price: 95, isNew: false, image: "https://images.unsplash.com/photo-1601924994987-69e26d50dc26?auto=format&fit=crop&q=80&w=600" },
-        { id: 8, name: "Running Sneakers", category: "Shoes", price: 110, isNew: false, image: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?auto=format&fit=crop&q=80&w=600" },
-      ]);
+                const initSystem = async () => {
+                    const sessionData = localStorage.getItem('dpos_session');
+                    if (sessionData) {
+                        const session = JSON.parse(sessionData);
+                        isLoggedIn.value = true;
+                        loggedInUserFullName.value = session.fullName;
+                        userRole.value = session.role;
+                        userPhotoUrl.value = session.photoUrl;
+                        adminName.value = session.adminName;
+                    }
+                    isCheckingSession.value = false;
 
-      // 2. Computed Properties
-      const cartTotalQty = computed(() => cart.value.reduce((acc, item) => acc + item.qty, 0));
-      const cartTotal = computed(() => cart.value.reduce((acc, item) => acc + (item.price * item.qty), 0));
-      const uniqueCategories = computed(() => [...new Set(products.value.map(p => p.category))]);
-      
-      const filteredProducts = computed(() => {
-          let result = products.value;
-          // Filter by Category
-          if (activeCategory.value !== 'All') {
-              result = result.filter(p => p.category === activeCategory.value);
-          }
-          // Filter by Search
-          if (searchQuery.value) {
-              const lower = searchQuery.value.toLowerCase();
-              result = result.filter(p => p.name.toLowerCase().includes(lower) || p.category.toLowerCase().includes(lower));
-          }
-          return result;
-      });
+                    try {
+                        const res = await fetch(`${API_URL}/api/config`);
+                        const firebaseConfig = await res.json();
+                        const app = initializeApp(firebaseConfig);
+                        db.value = getFirestore(app);
 
-      // 3. Lifecycle & Storage
-      onMounted(() => {
-          const savedCart = localStorage.getItem('sokpheak_cart');
-          if(savedCart) cart.value = JSON.parse(savedCart);
-          
-          window.addEventListener('scroll', () => {
-              isScrolled.value = window.scrollY > 50;
-          });
-      });
+                        if (isLoggedIn.value) { fetchProducts(); fetchReports(); }
+                    } catch (error) { console.error("Init Error"); }
+                };
 
-      watch(cart, (newCart) => {
-          localStorage.setItem('sokpheak_cart', JSON.stringify(newCart));
-      }, { deep: true });
+                const fetchProducts = async () => {
+                    if (!db.value) return;
+                    isLoadingProducts.value = true;
+                    try {
+                        const querySnapshot = await getDocs(collection(db.value, "stocks"));
+                        const fetchedData = [];
+                        querySnapshot.forEach((doc) => {
+                            const data = doc.data();
+                            fetchedData.push({
+                                id: doc.id, name: data.name || "Unknown",
+                                retailPrice: Number(data.retailPrice) || 0, retailUnit: data.retailUnit || "ដប",
+                                wholesalePrice: Number(data.wholesalePrice) || 0, wholesaleUnit: data.wholesaleUnit || "កេះ",
+                                stockQty: Number(data.quantity) || 0, image: data.image || ""
+                            });
+                        });
+                        products.value = fetchedData;
+                    } catch (error) { console.error(error); } 
+                    finally { isLoadingProducts.value = false; }
+                };
 
-      // 4. Custom Notification Logic
-      const notify = (title, message, type = 'success') => {
-          const id = Date.now();
-          notifications.value.push({ id, title, message, type });
-          setTimeout(() => removeNotification(id), 4000);
-      };
+                const fetchReports = async () => {
+                    if (!db.value) return;
+                    isLoadingReports.value = true;
+                    try {
+                        const q = query(collection(db.value, "sales_reports"), orderBy("createdAt", "desc"));
+                        const querySnapshot = await getDocs(q);
+                        const fetchedData = [];
+                        querySnapshot.forEach((doc) => { fetchedData.push({ id: doc.id, ...doc.data() }); });
+                        reports.value = fetchedData;
+                    } catch (error) { console.error(error); } 
+                    finally { isLoadingReports.value = false; }
+                };
 
-      const removeNotification = (id) => {
-          notifications.value = notifications.value.filter(n => n.id !== id);
-      };
+                const filteredReports = computed(() => {
+                    const now = new Date();
+                    return reports.value.filter(report => {
+                        if (filterType.value === 'all') return true;
+                        const reportDate = new Date(report.createdAt);
+                        if (filterType.value === 'today') return reportDate.toDateString() === now.toDateString();
+                        if (filterType.value === 'month') return reportDate.getMonth() === now.getMonth() && reportDate.getFullYear() === now.getFullYear();
+                        if (filterType.value === 'year') return reportDate.getFullYear() === now.getFullYear();
+                        return true;
+                    });
+                });
+                const totalRevenue = computed(() => filteredReports.value.reduce((sum, r) => r.paymentStatus === 'PAID' ? sum + (Number(r.totalAmount) || 0) : sum, 0));
+                const pendingOrdersCount = computed(() => filteredReports.value.filter(r => r.paymentStatus === 'PENDING').length);
+                
+                const handleLogin = async () => {
+                    loading.value = true;
+                    try {
+                        const userRef = collection(db.value, "users");
+                        const q = query(userRef, where("username", "==", loginForm.username), where("password", "==", loginForm.password));
+                        const querySnapshot = await getDocs(q);
 
-      // 5. Product Actions
-      const openProductDetail = (p) => activeProduct.value = p;
-      const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
-      const scrollToProducts = () => document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
-      const resetFilters = () => { searchQuery.value = ""; activeCategory.value = "All"; };
+                        if (!querySnapshot.empty) {
+                            const userData = querySnapshot.docs[0].data();
+                            isLoggedIn.value = true;
+                            userRole.value = userData.role || 'seller'; 
+                            loggedInUserFullName.value = userData.fullName || userData.username;
+                            userPhotoUrl.value = userData.photoUrl || '';
+                            adminName.value = userData.adminName || 'Pov Daro'; 
+                            
+                            localStorage.setItem('dpos_session', JSON.stringify({
+                                fullName: loggedInUserFullName.value, role: userRole.value,
+                                photoUrl: userPhotoUrl.value, adminName: adminName.value
+                            }));
+                            
+                            notify("ជោគជ័យ", `សូមស្វាគមន៍ ${loggedInUserFullName.value.toUpperCase()}`);
+                            currentView.value = 'pos'; fetchProducts(); fetchReports();
+                        } else { notify("បរាជ័យ", "គណនីមិនត្រឹមត្រូវ!", "error"); }
+                    } catch (error) { console.error(error); } 
+                    finally { loading.value = false; }
+                };
 
-      const addToCart = (product) => {
-          const existing = cart.value.find(item => item.id === product.id);
-          if(existing) existing.qty++;
-          else cart.value.push({ ...product, qty: 1 });
-          
-          notify("Added to Cart", `${product.name} is now in your bag.`);
-      };
+                const executeLogout = () => { 
+                    isLoggedIn.value = false; cart.value = []; userPhotoUrl.value = ''; currentView.value = 'pos';
+                    showLogoutConfirm.value = false;
+                    localStorage.removeItem('dpos_session'); 
+                };
 
-      const removeFromCart = (index) => {
-          cart.value.splice(index, 1);
-          notify("Removed", "Item removed from cart", "error");
-      };
+                const addToCart = (product, type = 'retail') => {
+                    const isWholesale = type === 'wholesale';
+                    const targetPrice = isWholesale ? product.wholesalePrice : product.retailPrice;
+                    const targetUnit = isWholesale ? product.wholesaleUnit : product.retailUnit;
+                    const cartItemId = product.id + '_' + type;
 
-      const updateQty = (index, change) => {
-          if(cart.value[index].qty + change > 0) cart.value[index].qty += change;
-      };
+                    const existing = cart.value.find(item => item.cartItemId === cartItemId);
+                    if(existing) existing.qty++;
+                    else cart.value.push({ id: product.id, cartItemId, name: product.name, image: product.image, type, unit: targetUnit, price: targetPrice, qty: 1 });
+                    notify("ចូលកន្ត្រក", `បានបន្ថែម ${product.name}`);
+                };
+                const removeFromCart = (index) => cart.value.splice(index, 1);
+                const updateQty = (index, change) => { if(cart.value[index].qty + change > 0) cart.value[index].qty += change; };
+                const cartTotalQty = computed(() => cart.value.reduce((acc, item) => acc + item.qty, 0));
+                const cartTotal = computed(() => cart.value.reduce((acc, item) => acc + (item.price * item.qty), 0));
 
-      // Wishlist Logic
-      const toggleWishlist = (product) => {
-          const index = wishlist.value.findIndex(p => p.id === product.id);
-          if (index === -1) {
-              wishlist.value.push(product);
-              notify("Wishlist Updated", `${product.name} added to favorites!`);
-          } else {
-              wishlist.value.splice(index, 1);
-              notify("Wishlist Updated", "Item removed from favorites.", "error");
-          }
-      };
-      const isWishlisted = (id) => wishlist.value.some(p => p.id === id);
+                const startCheckout = () => {
+                    if (cartTotalQty.value === 0) return;
+                    showCart.value = false;
+                    showCheckout.value = true;
+                    form.name = ''; form.phone = ''; form.city = 'ភ្នំពេញ'; form.province = ''; form.mapsLink = ''; form.branch = '';
+                };
 
-      // 6. Payment Logic
-      const processOrder = async () => {
-          if(!form.value.name || !form.value.phone) {
-              notify("Missing Info", "Please enter your name and phone number.", "error");
-              return;
-          }
-          loading.value = true;
+                const processPendingOrder = async () => {
+                    if(!form.name || !form.phone) return notify("Error", "សូមបញ្ចូលឈ្មោះ និងលេខទូរស័ព្ទ", "error");
+                    loading.value = true;
+                    try {
+                        const orderData = {
+                            items: [...cart.value],
+                            totalAmount: cartTotal.value,
+                            customerName: form.name,
+                            customerPhone: form.phone,
+                            location: 'ភ្នំពេញ (COD)',
+                            mapsLink: form.mapsLink,
+                            sellerName: loggedInUserFullName.value,
+                            sellerRole: userRole.value,
+                            paymentStatus: 'PENDING',
+                            paymentMethod: 'COD',
+                            createdAt: new Date().toISOString()
+                        };
 
-          try {
-              const res = await fetch(`${API_URL}/api/create-order`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ customer: form.value, cart: cart.value })
-              });
+                        const docRef = await addDoc(collection(db.value, "sales_reports"), orderData);
+                        
+                        for (const item of cart.value) {
+                            const stockRef = doc(db.value, "stocks", item.id);
+                            await updateDoc(stockRef, { quantity: increment(-item.qty) });
+                        }
+                        
+                        showCheckout.value = false;
+                        currentInvoice.value = { id: docRef.id, ...orderData };
+                        showInvoice.value = true;
+                        
+                        fetchProducts(); fetchReports();
+                        notify("ជោគជ័យ", "បានរក្សាទុករង់ចាំការទូទាត់ (COD)");
+                        cart.value = [];
+                    } catch(e) { notify("Error", "មានបញ្ហាក្នុងការរក្សាទុក", "error"); } 
+                    finally { loading.value = false; }
+                };
 
-              if (!res.ok) throw new Error("Server error");
-              const data = await res.json();
-              
-              if(data.qrString) {
-                  showCheckout.value = false;
-                  showQR.value = true;
-                  currentHash.value = data.md5;
-                  startCountdown(data.expireAt);
-                  setTimeout(() => renderQR(data.qrString), 100);
-                  startPolling(data.md5);
-              }
-          } catch(e) {
-              notify("Error", "Could not create order. Server might be down.", "error");
-          } finally {
-              loading.value = false;
-          }
-      };
+                const processOrder = async () => {
+                    if(!form.name || !form.phone || !form.province) return notify("Error", "សូមបញ្ចូលព័ត៌មានឱ្យបានគ្រប់គ្រាន់", "error");
+                    loading.value = true;
+                    currentOrderTotal.value = cartTotal.value;
+                    try {
+                        const payload = {
+                            customer: { name: form.name, phone: form.phone, address: `${form.province} - ${form.transportCompany} (${form.branch})` }, 
+                            cart: cart.value,
+                            seller: { name: loggedInUserFullName.value, role: userRole.value, adminName: adminName.value }
+                        };
+                        const res = await fetch(`${API_URL}/api/create-order`, {
+                            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+                        });
+                        const data = await res.json();
+                        if(data.qrString) {
+                            showCheckout.value = false; showQR.value = true;
+                            currentHash.value = data.md5;
+                            startCountdown(data.expireAt);
+                            setTimeout(() => {
+                                const qr = qrcode(0, "M"); qr.addData(data.qrString); qr.make();
+                                document.getElementById("qrcode").innerHTML = qr.createImgTag(6, 10);
+                            }, 100);
+                            startPolling(data.md5);
+                        }
+                    } catch(e) { notify("Error", "Server មិនដំណើរការ", "error"); } 
+                    finally { loading.value = false; }
+                };
 
-      const renderQR = (txt) => {
-          const qr = qrcode(0, "M");
-          qr.addData(txt);
-          qr.make();
-          document.getElementById("qrcode").innerHTML = qr.createImgTag(5);
-      };
+                const handleSuccess = async () => {
+                    clearInterval(pollTimer); clearInterval(timerInterval);
+                    showQR.value = false;
 
-      const formatTime = (seconds) => {
-          const m = Math.floor(seconds / 60);
-          const s = seconds % 60;
-          return `${m}:${s < 10 ? '0' : ''}${s}`;
-      };
+                    if (cart.value.length > 0) {
+                        try {
+                            const orderData = {
+                                items: [...cart.value], totalAmount: cartTotal.value,
+                                customerName: form.name, customerPhone: form.phone,
+                                location: form.city === 'ភ្នំពេញ' ? 'ភ្នំពេញ' : form.province,
+                                transportCompany: form.city !== 'ភ្នំពេញ' ? form.transportCompany : '',
+                                branch: form.city !== 'ភ្នំពេញ' ? form.branch : '',
+                                sellerName: loggedInUserFullName.value, sellerRole: userRole.value,
+                                paymentStatus: 'PAID', paymentMethod: 'KHQR',
+                                createdAt: new Date().toISOString()
+                            };
 
-      const startCountdown = (expiryTimestamp) => {
-          clearInterval(timerInterval);
-          const updateTimer = () => {
-              const now = Date.now();
-              const diff = Math.max(0, Math.floor((expiryTimestamp - now) / 1000));
-              qrTimeLeft.value = diff;
-              if (diff <= 0) {
-                  clearInterval(timerInterval);
-                  cancelPayment();
-                  notify("Expired", "QR Code has expired.", "error");
-              }
-          };
-          updateTimer();
-          timerInterval = setInterval(updateTimer, 1000);
-      };
+                            const docRef = await addDoc(collection(db.value, "sales_reports"), orderData);
+                            for (const item of cart.value) {
+                                const stockRef = doc(db.value, "stocks", item.id);
+                                await updateDoc(stockRef, { quantity: increment(-item.qty) });
+                            }
+                            
+                            currentInvoice.value = { id: docRef.id, ...orderData };
+                            showInvoice.value = true;
+                            fetchProducts(); fetchReports(); 
+                            notify("ជោគជ័យ", "ការទូទាត់ប្រាក់ទទួលបានជោគជ័យ!");
+                        } catch (error) { notify("Warning", "លុយទទួលបានហើយ តែមានបញ្ហាក្នុងការកាត់ស្តុក", "error"); }
+                        cart.value = []; 
+                    } 
+                    else if (pendingOrderToPay.value) {
+                        try {
+                            const reportRef = doc(db.value, "sales_reports", pendingOrderToPay.value.id);
+                            await updateDoc(reportRef, { paymentStatus: 'PAID', paymentMethod: 'KHQR' });
+                            fetchReports();
+                            notify("ជោគជ័យ", "វិក្កយបត្រត្រូវបានទូទាត់រួចរាល់!");
+                            pendingOrderToPay.value = null;
+                        } catch (e) { notify("Error", "មានបញ្ហាក្នុងការ Update", "error"); }
+                    }
+                };
 
-      const startPolling = (md5) => {
-          pollTimer = setInterval(async () => {
-              try {
-                  const res = await fetch(`${API_URL}/api/check-status`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ md5 })
-                  });
-                  const d = await res.json();
-                  if(d.status === "success") handleSuccess();
-              } catch {}
-          }, 3000);
-      };
+                const cancelPayment = () => { showQR.value = false; clearInterval(pollTimer); clearInterval(timerInterval); };
 
-      const handleSuccess = () => {
-          clearInterval(pollTimer);
-          clearInterval(timerInterval);
-          showQR.value = false;
-          cart.value = [];
-          form.value = { name: '', phone: '', address: '' };
-          notify("Payment Successful", "Thank you! Your order is confirmed.");
-      };
+                const cancelPendingOrder = async (report) => {
+                    if(!confirm("តើអ្នកពិតជាចង់លុបចោលវិក្កយបត្រនេះមែនទេ? (ស្តុកនឹងត្រូវបូកបញ្ចូលវិញ)")) return;
+                    try {
+                        const reportRef = doc(db.value, "sales_reports", report.id);
+                        await updateDoc(reportRef, { paymentStatus: 'CANCELLED' });
+                        for (const item of report.items) {
+                            const stockRef = doc(db.value, "stocks", item.id);
+                            await updateDoc(stockRef, { quantity: increment(item.qty) });
+                        }
+                        fetchProducts(); fetchReports();
+                        notify("ជោគជ័យ", "វិក្កយបត្រត្រូវបានលុបចោល និងបង្វិលស្តុកវិញ!");
+                    } catch(e) { notify("Error", "មិនអាចលុបចោលបានទេ", "error"); }
+                };
 
-      const cancelPayment = () => {
-          showQR.value = false;
-          clearInterval(pollTimer);
-          clearInterval(timerInterval);
-      };
+                const openPayPendingModal = (report) => {
+                    pendingOrderToPay.value = report;
+                    pendingCashAmount.value = report.totalAmount;
+                    pendingCashNote.value = '';
+                    showPendingPayModal.value = true;
+                };
 
-      socket.on("payment-success", (data) => {
-          if(data.md5 === currentHash.value) handleSuccess();
-      });
+                const confirmPendingPayment = async () => {
+                    if (pendingPayMethod.value === 'cash') {
+                        loading.value = true;
+                        try {
+                            const reportRef = doc(db.value, "sales_reports", pendingOrderToPay.value.id);
+                            await updateDoc(reportRef, { 
+                                paymentStatus: 'PAID', 
+                                paymentMethod: 'CASH',
+                                cashNote: pendingCashNote.value,
+                                receivedAmount: pendingCashAmount.value
+                            });
+                            showPendingPayModal.value = false;
+                            pendingOrderToPay.value = null;
+                            fetchReports();
+                            notify("ជោគជ័យ", "ទទួលបានប្រាក់សុទ្ធជោគជ័យ!");
+                        } catch(e) { notify("Error", "មានបញ្ហាក្នុងការ Update", "error"); }
+                        finally { loading.value = false; }
+                    } else if (pendingPayMethod.value === 'qr') {
+                        loading.value = true;
+                        currentOrderTotal.value = pendingOrderToPay.value.totalAmount;
+                        try {
+                            const payload = {
+                                customer: { name: pendingOrderToPay.value.customerName, phone: pendingOrderToPay.value.customerPhone }, 
+                                cart: pendingOrderToPay.value.items,
+                                seller: { name: loggedInUserFullName.value, role: userRole.value, adminName: adminName.value }
+                            };
+                            const res = await fetch(`${API_URL}/api/create-order`, {
+                                method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+                            });
+                            const data = await res.json();
+                            if(data.qrString) {
+                                showPendingPayModal.value = false; showQR.value = true;
+                                currentHash.value = data.md5;
+                                startCountdown(data.expireAt);
+                                setTimeout(() => {
+                                    const qr = qrcode(0, "M"); qr.addData(data.qrString); qr.make();
+                                    document.getElementById("qrcode").innerHTML = qr.createImgTag(6, 10);
+                                }, 100);
+                                startPolling(data.md5);
+                            }
+                        } catch(e) { notify("Error", "Server មិនដំណើរការ", "error"); } 
+                        finally { loading.value = false; }
+                    }
+                };
 
-      return { 
-          products, cart, wishlist, form, searchQuery, activeCategory, isScrolled,
-          showCart, showCheckout, showQR, loading, activeProduct, notifications,
-          cartTotalQty, cartTotal, filteredProducts, uniqueCategories, qrTimeLeft,
-          openProductDetail, scrollToTop, scrollToProducts, resetFilters,
-          addToCart, removeFromCart, updateQty, toggleWishlist, isWishlisted,
-          processOrder, cancelPayment, formatTime, removeNotification
-      };
-  }
-}).mount('#app');
-</script>
+                const closeInvoice = () => { showInvoice.value = false; currentInvoice.value = null; };
+                const printInvoice = () => { window.print(); };
+                const downloadInvoiceImage = async () => {
+                    const element = document.getElementById('invoice-capture');
+                    if(element) {
+                        try {
+                            const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+                            const link = document.createElement('a');
+                            link.download = `Invoice-${currentInvoice.value.customerName}-${Date.now()}.png`;
+                            link.href = canvas.toDataURL('image/png');
+                            link.click();
+                        } catch(e) { notify("Error", "មិនអាច Download រូបភាពបានទេ", "error"); }
+                    }
+                };
+
+                const formatTime = (s) => `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+                const formatDate = (isoString) => new Date(isoString).toLocaleDateString('km-KH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                
+                const startCountdown = (exp) => {
+                    clearInterval(timerInterval);
+                    timerInterval = setInterval(() => {
+                        const diff = Math.max(0, Math.floor((exp - Date.now()) / 1000));
+                        qrTimeLeft.value = diff;
+                        if (diff <= 0) { cancelPayment(); notify("ផុតកំណត់", "QR Code បានផុតកំណត់", "error"); }
+                    }, 1000);
+                };
+
+                const startPolling = (md5) => {
+                    pollTimer = setInterval(async () => {
+                        try {
+                            const res = await fetch(`${API_URL}/api/check-status`, {
+                                method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ md5 })
+                            });
+                            const d = await res.json();
+                            if(d.status === "success") handleSuccess();
+                        } catch {}
+                    }, 3000);
+                };
+
+                socket.on("payment-success", (data) => { if(data.md5 === currentHash.value) handleSuccess(); });
+                onMounted(() => initSystem());
+
+                return {
+                    currentView, isCheckingSession, isLoggedIn, userRole, loggedInUserFullName, userPhotoUrl, loginForm, 
+                    handleLogin, showLogoutConfirm, executeLogout, // ✅ កុំភ្លេច Return executeLogout ទីនេះ!
+                    products, isLoadingProducts, cart, form, showCart, showCheckout, showQR, loading, notifications, qrTimeLeft, currentOrderTotal,
+                    reports, isLoadingReports, filterType, filteredReports, totalRevenue, pendingOrdersCount, formatDate,
+                    cartTotalQty, cartTotal, addToCart, removeFromCart, updateQty, cancelPayment, formatTime,
+                    startCheckout, processPendingOrder, processOrder, cancelPendingOrder, 
+                    showPendingPayModal, pendingOrderToPay, pendingPayMethod, pendingCashAmount, pendingCashNote, openPayPendingModal, confirmPendingPayment,
+                    showInvoice, currentInvoice, closeInvoice, printInvoice, downloadInvoiceImage
+                };
+            }
+        }).mount('#app');
+    </script>
 </body>
 </html>
